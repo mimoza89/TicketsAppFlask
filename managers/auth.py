@@ -5,7 +5,7 @@ from decouple import config
 from flask_httpauth import HTTPTokenAuth
 from jwt import DecodeError
 from werkzeug.exceptions import BadRequest, Unauthorized
-from werkzeug.security import generate_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
 
 from db import db
 from models.users import User
@@ -18,6 +18,17 @@ class AuthManager:
         user = User(**user_data)
         db.session.add(user)
         db.session.commit()
+        return user
+
+    @staticmethod
+    def sign_in_user(user_data):
+        user = User.query.filter_by(email=user_data["email"]).first()
+        if not user:
+            raise BadRequest("Invalid email or password!")
+
+        if not check_password_hash(user.password, user_data["password"]):
+            raise BadRequest("Invalid email or password!")
+
         return user
 
     @staticmethod
